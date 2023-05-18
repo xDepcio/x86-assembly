@@ -12,12 +12,36 @@
 
 # clean:
 # 	rm -f *.o
+##############################
+# CC = gcc
+# CFLAGS = -Wall -Wextra -pedantic -std=c11
 
+# # Name of the executable
+# TARGET = bmp_loader
+
+# # Source files
+# SRCS = main.c
+
+# # Object files
+# OBJS = $(SRCS:.c=.o)
+
+# all: $(TARGET)
+
+# $(TARGET): $(OBJS)
+# 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
+
+# %.o: %.c
+# 	$(CC) $(CFLAGS) -c $< -o $@
+
+# clean:
+# 	rm -f $(OBJS) $(TARGET)
+##############################
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -std=c11
+LDFLAGS = -lm
 
 # Name of the executable
-TARGET = bmp_loader
+TARGET = main
 
 # Source files
 SRCS = main.c
@@ -28,7 +52,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "swapNumbers.h"
+#include <math.h>
+#include <string.h>
+
 #pragma pack(push, 1)
 typedef struct {
     uint16_t signature;
@@ -66,7 +69,7 @@ void* loadBMP(const char* filename, BMPHeader* to_header, BMPInfoHeader* to_info
     return pixel_data;
 }
 
-void savePixels(const char* filename, const unsigned char* pixel_data, int pixels_offset, int pixels_size)
+void savePixels(const char* filename, char* pixel_data, int pixels_offset, int pixels_size)
 {
     FILE* file = fopen(filename, "r+b");
     fseek(file, pixels_offset, 1);
@@ -74,46 +77,70 @@ void savePixels(const char* filename, const unsigned char* pixel_data, int pixel
     fclose(file);
 }
 
+char* transformPixels(char* pixels, char* pixels_copy, int width, int height)
+{
+    int RADIUS = 50;
+    float ANGLE = 0.7853; // pi/4 - 45 degrees
+
+    int total_pixels = width*height;
+    int total_pixels_size = total_pixels*3;
+
+    int center_x = width/2;
+    int center_y = height/2;
+
+    for (int px = 0; px < total_pixels; px++)
+    {
+        int x = px % height;
+        int y = px / height;
+
+        float dx = x-center_x;
+        float dy = y-center_y;
+
+        int distance_from_center2 = (dx * dx) + (dy * dy);
+
+        if(distance_from_center2 > RADIUS*RADIUS)
+        {
+            continue;
+        }
+        else
+        {
+            int distance_from_center = sqrt(distance_from_center2);
+            float ratio = (float)(RADIUS-distance_from_center)/(float)RADIUS;
+            float rot_angle = ratio * ANGLE;
+            // float rot_angle = ANGLE;
+
+            int out_x = cos(rot_angle)*(x-center_x) - sin(rot_angle)*(y-center_y) + center_x;
+            int out_y = sin(rot_angle)*(x-center_x) + cos(rot_angle)*(y-center_y) + center_y;
+
+            int offset = (out_y*width + out_x)*3;
+            uint8_t red = pixels[offset];
+            uint8_t green = pixels[offset+1];
+            uint8_t blue = pixels[offset+2];
+
+            pixels_copy[px*3] = red;
+            pixels_copy[px*3+1] = green;
+            pixels_copy[px*3+2] = blue;
+        }
+    }
+
+    return pixels_copy;
+}
+
 int main()
 {
     const char* filename = "ein24.bmp";
     BMPHeader header;
     BMPInfoHeader info_header;
-    unsigned char* pixel_data = (unsigned char*)loadBMP(filename, &header, &info_header);
+    char* pixel_data_copy = (char*)loadBMP(filename, &header, &info_header);
+    char* pixel_data = (char*)loadBMP(filename, &header, &info_header);
 
-    // Use the pixel_data pointer to access the pixel values
     int img_size = info_header.width * info_header.height;
 
-    for (int i = 0; i < img_size*3; i += 3) {
-        // Extract the RGB components
-        unsigned char blue = pixel_data[i];
-        unsigned char green = pixel_data[i + 1];
-        unsigned char red = pixel_data[i + 2];
+    char* transformed_pixels = transformPixels(pixel_data, pixel_data_copy, info_header.width, info_header.height);
 
-        // Calculate the average value
-        unsigned char gray = (red + green + blue) / 3;
-
-        // Set the grayscale value for all components
-        pixel_data[i] = gray;
-        pixel_data[i + 1] = gray;
-        pixel_data[i + 2] = gray;
-    }
-
-    savePixels(filename, pixel_data, header.pixel_data_offset, img_size);
+    // savePixels(filename, pixel_data, header.pixel_data_offset, img_size);
+    savePixels(filename, transformed_pixels, header.pixel_data_offset, img_size);
 
     free(pixel_data);
     return 0;
 }
-
-// int main(int argc, char *argv[])
-// {
-//     if(argc < 2)
-//     {
-//         printf("Arg. missing\n");
-//         return;
-//     }
-//     char* res = swapNumbers(argv[1]);
-//     printf(res);
-//     printf("\n");
-//     return 0;
-// }
