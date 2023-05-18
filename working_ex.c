@@ -77,6 +77,7 @@ int main(int argc, const char *argv[])
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(display));
     al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue , al_get_mouse_event_source());
     al_start_timer(timer);
 
     while (1) {
@@ -105,6 +106,19 @@ int main(int argc, const char *argv[])
     }
         if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             break;
+        if(event.type == ALLEGRO_EVENT_MOUSE_AXES) {
+            fprintf(stderr, "dasdas!\n");
+        }
+        if(event.type == ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY) {
+            fprintf(stderr, "dasdas!\n");
+        }
+        if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+            fprintf(stderr, "dasdas!\n");
+            zoom = 2;
+        }
+        if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+            fprintf(stderr, "dasdas!\n");
+        }
         if (event.type == ALLEGRO_EVENT_KEY_CHAR) {
             if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
                 break;
