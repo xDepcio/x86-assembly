@@ -10,7 +10,13 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "-lm"
+                "-lm",
+                "-lallegro_image",
+                "-lallegro_memfile",
+                "-lallegro",
+                "-lallegro_font",
+                "-lallegro_main",
+                "$(pkg-config allegro-5 allegro_main-5 allegro_font-5 --libs --cflags)"
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -34,7 +40,8 @@
                 "${file}",
                 "-o",
                 // "${fileDirname}/${fileBasenameNoExtension}",
-                "-lm"
+                "-lm",
+                "$(pkg-config allegro-5 allegro_main-5 allegro_font-5 --libs --cflags)"
             ],
             "options": {
                 "cwd": "${fileDirname}"

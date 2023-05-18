@@ -4,6 +4,9 @@
 #include "swapNumbers.h"
 #include <math.h>
 #include <string.h>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_memfile.h>
 
 #pragma pack(push, 1)
 typedef struct {
@@ -69,6 +72,25 @@ void* loadBMP(const char* filename, BMPHeader* to_header, BMPInfoHeader* to_info
     return pixel_data;
 }
 
+char* loadBMPRaw(const char* filename)
+{
+    FILE* file = fopen(filename, "r+b");
+    if (!file) {
+        printf("Failed to open the file: %s\n", filename);
+        return NULL;
+    }
+
+    // Read the header
+    BMPHeader header;
+    fread(&header, sizeof(BMPHeader), 1, file);
+
+    char* raw_file = (char*)malloc(header.file_size);
+    fseek(file, 0, 0);
+    fread(raw_file, header.file_size, 1, file);
+    fclose(file);
+    return raw_file;
+}
+
 void savePixels(const char* filename, char* pixel_data, int pixels_offset, int pixels_size)
 {
     FILE* file = fopen(filename, "r+b");
@@ -126,6 +148,22 @@ char* transformPixels(char* pixels, char* pixels_copy, int width, int height)
     return pixels_copy;
 }
 
+ALLEGRO_BITMAP *load_bitmap_from_memory(char* data, size_t size)
+{
+    ALLEGRO_FILE *memfile = al_open_memfile(data, size, "r");
+    if (!memfile)
+    {
+        fprintf(stderr, "Failed to open memory file!\n");
+        return NULL;
+    }
+
+    // ALLEGRO_BITMAP *bitmap = al_load_bitmap_f(memfile, ".bmp");
+    ALLEGRO_BITMAP *bitmap = al_load_bitmap("ein24.png");
+    al_fclose(memfile);
+
+    return bitmap;
+}
+
 int main()
 {
     const char* filename = "ein24.bmp";
@@ -133,8 +171,37 @@ int main()
     BMPInfoHeader info_header;
     char* pixel_data_copy = (char*)loadBMP(filename, &header, &info_header);
     char* pixel_data = (char*)loadBMP(filename, &header, &info_header);
+    char* bmp_raw = loadBMPRaw(filename);
 
     int img_size = info_header.width * info_header.height;
+
+    // Initialize Allegro
+    if (!al_init()) {
+        fprintf(stderr, "Failed to initialize Allegro!\n");
+        return -1;
+    }
+    al_init_image_addon();
+
+    // Create a display window
+    ALLEGRO_DISPLAY *display = al_create_display(info_header.width, info_header.height); // Replace width and height with your desired dimensions
+
+    // if (!display) {
+    //     fprintf(stderr, "Failed to create display window!\n");
+    //     return -1;
+    // }
+
+    // ...
+
+
+    ALLEGRO_BITMAP *membitmap = load_bitmap_from_memory(bmp_raw, header.file_size); // Replace bmpData and bmpSize with your actual data
+    if (!membitmap) {
+        fprintf(stderr, "Failed to load bitmap!\n");
+        return -1;
+    }
+    // ALLEGRO_BITMAP *membitmap = al_load_bitmap("ein24.bmp");
+
+    al_draw_bitmap(membitmap, 0, 0, 0); // Draw the bitmap at coordinates (0, 0)
+    al_flip_display(); // Update the display
 
     char* transformed_pixels = transformPixels(pixel_data, pixel_data_copy, info_header.width, info_header.height);
 
@@ -142,5 +209,7 @@ int main()
     savePixels(filename, transformed_pixels, header.pixel_data_offset, img_size);
 
     free(pixel_data);
+    free(bmp_raw);
+    al_destroy_display(display);
     return 0;
 }
