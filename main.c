@@ -72,24 +72,24 @@ void* loadBMP(const char* filename, BMPHeader* to_header, BMPInfoHeader* to_info
     return pixel_data;
 }
 
-char* loadBMPRaw(const char* filename)
-{
-    FILE* file = fopen(filename, "r+b");
-    if (!file) {
-        printf("Failed to open the file: %s\n", filename);
-        return NULL;
-    }
+// char* loadBMPRaw(const char* filename)
+// {
+//     FILE* file = fopen(filename, "r+b");
+//     if (!file) {
+//         printf("Failed to open the file: %s\n", filename);
+//         return NULL;
+//     }
 
-    // Read the header
-    BMPHeader header;
-    fread(&header, sizeof(BMPHeader), 1, file);
+//     // Read the header
+//     BMPHeader header;
+//     fread(&header, sizeof(BMPHeader), 1, file);
 
-    char* raw_file = (char*)malloc(header.file_size);
-    fseek(file, 0, 0);
-    fread(raw_file, header.file_size, 1, file);
-    fclose(file);
-    return raw_file;
-}
+//     char* raw_file = (char*)malloc(header.file_size);
+//     fseek(file, 0, 0);
+//     fread(raw_file, header.file_size, 1, file);
+//     fclose(file);
+//     return raw_file;
+// }
 
 void savePixels(const char* filename, char* pixel_data, int pixels_offset, int pixels_size)
 {
@@ -99,16 +99,24 @@ void savePixels(const char* filename, char* pixel_data, int pixels_offset, int p
     fclose(file);
 }
 
-char* transformPixels(char* pixels, char* pixels_copy, int width, int height)
+char* transformPixels(char* pixels, int origin_x, int origin_y, int radius, int angle_deg, int width, int height)
 {
-    int RADIUS = 50;
-    float ANGLE = 0.7853; // pi/4 - 45 degrees
-
     int total_pixels = width*height;
     int total_pixels_size = total_pixels*3;
 
-    int center_x = width/2;
-    int center_y = height/2;
+    char* pixels_copy = (char*)malloc(total_pixels_size);
+    memcpy(pixels_copy, pixels, total_pixels_size);
+
+    // int RADIUS = 50;
+    int RADIUS = radius;
+    // float ANGLE = 0.7853; // pi/4 - 45 degrees
+    float ANGLE = (float)angle_deg/(float)180 * (float)3.14159265;
+
+
+    // int center_x = width/2;
+    // int center_y = height/2;
+    int center_x = origin_x;
+    int center_y = height - origin_y;
 
     for (int px = 0; px < total_pixels; px++)
     {
@@ -144,7 +152,6 @@ char* transformPixels(char* pixels, char* pixels_copy, int width, int height)
             pixels_copy[px*3+2] = blue;
         }
     }
-
     return pixels_copy;
 }
 
@@ -158,7 +165,7 @@ ALLEGRO_BITMAP *load_bitmap_from_memory(char* data, size_t size)
     }
 
     // ALLEGRO_BITMAP *bitmap = al_load_bitmap_f(memfile, ".bmp");
-    ALLEGRO_BITMAP *bitmap = al_load_bitmap("ein24.png");
+    ALLEGRO_BITMAP *bitmap = al_load_bitmap("ein24.bmp");
     al_fclose(memfile);
 
     return bitmap;
@@ -166,14 +173,12 @@ ALLEGRO_BITMAP *load_bitmap_from_memory(char* data, size_t size)
 
 int main()
 {
-    const char* filename = "ein24.bmp";
-    BMPHeader header;
-    BMPInfoHeader info_header;
-    char* pixel_data_copy = (char*)loadBMP(filename, &header, &info_header);
-    char* pixel_data = (char*)loadBMP(filename, &header, &info_header);
-    char* bmp_raw = loadBMPRaw(filename);
-
-    int img_size = info_header.width * info_header.height;
+    ALLEGRO_DISPLAY *display;
+    ALLEGRO_BITMAP *membitmap, *bitmap;
+    ALLEGRO_TIMER *timer;
+    ALLEGRO_EVENT_QUEUE *queue;
+    bool redraw = true;
+    int zoom = 1;
 
     // Initialize Allegro
     if (!al_init()) {
@@ -181,32 +186,120 @@ int main()
         return -1;
     }
     al_init_image_addon();
+    al_install_mouse();
+    al_install_keyboard();
+
+    const char* filename = "ein24.bmp";
+    BMPHeader header;
+    BMPInfoHeader info_header;
+    // char* pixel_data_copy = (char*)loadBMP(filename, &header, &info_header);
+    char* pixel_data = (char*)loadBMP(filename, &header, &info_header);
+    // char* bmp_raw = loadBMPRaw(filename);
+
+    int img_size = info_header.width * info_header.height;
+
+    char* bmp_raw = (char*)malloc(header.file_size);
+    memcpy(bmp_raw, &header, 14);
+    memcpy(bmp_raw+14, &info_header, 40);
+    memcpy(bmp_raw+54, pixel_data, header.file_size-54);
+
+
 
     // Create a display window
-    ALLEGRO_DISPLAY *display = al_create_display(info_header.width, info_header.height); // Replace width and height with your desired dimensions
+    display = al_create_display(info_header.width, info_header.height); // Replace width and height with your desired dimensions
 
-    // if (!display) {
-    //     fprintf(stderr, "Failed to create display window!\n");
-    //     return -1;
-    // }
-
-    // ...
-
-
-    ALLEGRO_BITMAP *membitmap = load_bitmap_from_memory(bmp_raw, header.file_size); // Replace bmpData and bmpSize with your actual data
+    membitmap = load_bitmap_from_memory(bmp_raw, header.file_size); // Replace bmpData and bmpSize with your actual data
     if (!membitmap) {
         fprintf(stderr, "Failed to load bitmap!\n");
         return -1;
     }
-    // ALLEGRO_BITMAP *membitmap = al_load_bitmap("ein24.bmp");
 
     al_draw_bitmap(membitmap, 0, 0, 0); // Draw the bitmap at coordinates (0, 0)
     al_flip_display(); // Update the display
 
-    char* transformed_pixels = transformPixels(pixel_data, pixel_data_copy, info_header.width, info_header.height);
+    // char* transformed_pixels = transformPixels(pixel_data, pixel_data_copy, info_header.width, info_header.height);
 
     // savePixels(filename, pixel_data, header.pixel_data_offset, img_size);
-    savePixels(filename, transformed_pixels, header.pixel_data_offset, img_size);
+    // savePixels(filename, transformed_pixels, header.pixel_data_offset, img_size);
+
+    timer = al_create_timer(1.0 / 30);
+    queue = al_create_event_queue();
+    al_register_event_source(queue, al_get_keyboard_event_source());
+    al_register_event_source(queue, al_get_display_event_source(display));
+    al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue , al_get_mouse_event_source());
+    al_start_timer(timer);
+
+    while (1) {
+        ALLEGRO_EVENT event;
+        al_wait_for_event(queue, &event);
+        if (event.type == ALLEGRO_EVENT_DISPLAY_ORIENTATION) {
+            int o = event.display.orientation;
+            if (o == ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES) {
+                printf("0 degrees\n");
+            }
+            else if (o == ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES) {
+                printf("90 degrees\n");
+            }
+            else if (o == ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES) {
+                printf("180 degrees\n");
+            }
+            else if (o == ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES) {
+                printf("270 degrees\n");
+            }
+            else if (o == ALLEGRO_DISPLAY_ORIENTATION_FACE_UP) {
+                printf("Face up\n");
+            }
+            else if (o == ALLEGRO_DISPLAY_ORIENTATION_FACE_DOWN) {
+                printf("Face down\n");
+            }
+        }
+        if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+            break;
+        if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+            fprintf(stderr, "dasdas!\n");
+            fprintf(stderr, "mouse.x: %d", event.mouse.x);
+            fprintf(stderr, "mouse.y: %d", event.mouse.y);
+            char* new_pixels = transformPixels(bmp_raw+54, event.mouse.x, event.mouse.y, 50, 45, info_header.width, info_header.height);
+            memcpy(bmp_raw+54, new_pixels, header.file_size-54);
+            free(new_pixels);
+            savePixels("ein24.bmp", bmp_raw+54, 54, header.file_size-54);
+        }
+        if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+            fprintf(stderr, "dasdas!\n");
+        }
+        if (event.type == ALLEGRO_EVENT_KEY_CHAR) {
+            if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+                break;
+            if (event.keyboard.unichar == '1')
+                zoom = 1;
+            if (event.keyboard.unichar == '+')
+                zoom *= 1.1;
+            if (event.keyboard.unichar == '-')
+                zoom /= 1.1;
+            if (event.keyboard.unichar == 'f')
+                zoom = (double)al_get_display_width(display) /
+                    al_get_bitmap_width(bitmap);
+        }
+        if (event.type == ALLEGRO_EVENT_TIMER)
+            redraw = true;
+        if (redraw && al_is_event_queue_empty(queue)) {
+            redraw = false;
+            al_clear_to_color(al_map_rgb_f(0, 0, 0));
+            ALLEGRO_BITMAP *new_membitmap = load_bitmap_from_memory(bmp_raw, header.file_size); // Replace bmpData and bmpSize with your actual data
+            if (!new_membitmap) {
+                fprintf(stderr, "Failed to load bitmap!\n");
+                return -1;
+            }
+            al_draw_bitmap(new_membitmap, 0, 0, 0);
+            if (zoom == 1)
+                al_draw_bitmap(new_membitmap, 0, 0, 0);
+            else
+                al_draw_scaled_rotated_bitmap(
+                    new_membitmap, 0, 0, 0, 0, zoom, zoom, 0, 0);
+            al_flip_display();
+        }
+    }
 
     free(pixel_data);
     free(bmp_raw);
