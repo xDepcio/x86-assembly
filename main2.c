@@ -8,8 +8,6 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_memfile.h>
 
-// gcc -o main main.c -lm -lallegro_image -lallegro_memfile -lallegro -lallegro_font -lallegro_main
-
 #pragma pack(push, 1)
 typedef struct {
     uint16_t signature;
@@ -101,50 +99,50 @@ void savePixels(const char* filename, char* pixel_data, int pixels_offset, int p
     fclose(file);
 }
 
-char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_y, int radius, int angle_deg, int width, int height)
-{
-    int total_pixels = width*height;
-    int total_pixels_size = total_pixels*3;
+// char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_y, int radius, int angle_deg, int width, int height)
+// {
+//     int total_pixels = width*height;
+//     int total_pixels_size = total_pixels*3;
 
-    float ANGLE = angle_deg/(float)180 * (float)3.14159265;
+//     float ANGLE = (float)angle_deg/(float)180 * (float)3.14159265;
 
-    origin_y = height - origin_y;
+//     int origin_y = height - origin_y;
 
-    for (int px = 0; px < total_pixels; px++)
-    {
-        int x = px % height;
-        int y = px / height;
+//     for (int px = 0; px < total_pixels; px++)
+//     {
+//         int x = px % height;
+//         int y = px / height;
 
-        int dx = x-origin_x;
-        int dy = y-origin_y;
+//         float dx = x-origin_x;
+//         float dy = y-origin_y;
 
-        int distance_from_center2 = (dx * dx) + (dy * dy);
+//         int distance_from_center2 = (dx * dx) + (dy * dy);
 
-        if(distance_from_center2 > radius*radius)
-        {
-            continue;
-        }
-        else
-        {
-            int distance_from_center = sqrt(distance_from_center2);
-            float ratio = (float)(radius-distance_from_center)/(float)radius;
-            float rot_angle = ratio * ANGLE;
+//         if(distance_from_center2 > radius*radius)
+//         {
+//             continue;
+//         }
+//         else
+//         {
+//             int distance_from_center = sqrt(distance_from_center2);
+//             float ratio = (float)(radius-distance_from_center)/(float)radius;
+//             float rot_angle = ratio * ANGLE;
 
-            int out_x = cos(rot_angle)*(x-origin_x) - sin(rot_angle)*(y-origin_y) + origin_x;
-            int out_y = sin(rot_angle)*(x-origin_x) + cos(rot_angle)*(y-origin_y) + origin_y;
+//             int out_x = cos(rot_angle)*(x-origin_x) - sin(rot_angle)*(y-origin_y) + origin_x;
+//             int out_y = sin(rot_angle)*(x-origin_x) + cos(rot_angle)*(y-origin_y) + origin_y;
 
-            int offset = (out_y*width + out_x)*3;
-            uint8_t red = pixels[offset];
-            uint8_t green = pixels[offset+1];
-            uint8_t blue = pixels[offset+2];
+//             int offset = (out_y*width + out_x)*3;
+//             uint8_t red = pixels[offset];
+//             uint8_t green = pixels[offset+1];
+//             uint8_t blue = pixels[offset+2];
 
-            pixels_copy[px*3] = red;
-            pixels_copy[px*3+1] = green;
-            pixels_copy[px*3+2] = blue;
-        }
-    }
-    return pixels_copy;
-}
+//             pixels_copy[px*3] = red;
+//             pixels_copy[px*3+1] = green;
+//             pixels_copy[px*3+2] = blue;
+//         }
+//     }
+//     return pixels_copy;
+// }
 
 ALLEGRO_BITMAP *load_bitmap_from_memory(char* data, size_t size)
 {
@@ -253,7 +251,7 @@ int main()
             fprintf(stderr, "mouse.y: %d", event.mouse.y);
             char* pixels_copy = (char*)malloc(header.file_size-54);
             memcpy(pixels_copy, bmp_raw+54, header.file_size-54);
-            transformPixels(bmp_raw+54, pixels_copy, event.mouse.x, event.mouse.y, 50, 45, info_header.width, info_header.height);
+            transformf(bmp_raw+54, pixels_copy, event.mouse.x, event.mouse.y, 50, 45, info_header.width, info_header.height);
             memcpy(bmp_raw+54, pixels_copy, header.file_size-54);
             free(pixels_copy);
             savePixels("ein24.bmp", bmp_raw+54, 54, header.file_size-54);
