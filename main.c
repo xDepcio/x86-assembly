@@ -39,41 +39,6 @@ typedef struct {
 } BMPInfoHeader;
 #pragma pack(pop)
 
-void* loadBMP(const char* filename, BMPHeader* to_header, BMPInfoHeader* to_info_header)
-{
-    FILE* file = fopen(filename, "r+b");
-    if (!file) {
-        printf("Failed to open the file: %s\n", filename);
-        return NULL;
-    }
-
-    BMPHeader header;
-    fread(&header, sizeof(BMPHeader), 1, file);
-
-    BMPInfoHeader info_header;
-    fread(&info_header, sizeof(BMPInfoHeader), 1, file);
-
-    int image_size = info_header.width * info_header.height;
-    int bytes_pixels_size = image_size * 3;
-
-    unsigned char* pixel_data = (unsigned char*)malloc(bytes_pixels_size);
-    if (!pixel_data) {
-        printf("Failed to allocate memory for pixel data\n");
-        fclose(file);
-        return NULL;
-    }
-
-    fseek(file, header.pixel_data_offset, SEEK_SET);
-    fread(pixel_data, bytes_pixels_size, 1, file);
-
-    fclose(file);
-
-    *to_header = header;
-    *to_info_header = info_header;
-
-    return pixel_data;
-}
-
 char* loadBMP2(const char* filename, BMPHeader* to_header, BMPInfoHeader* to_info_header)
 {
     FILE* file = fopen(filename, "r+b");

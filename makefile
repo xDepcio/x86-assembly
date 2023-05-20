@@ -106,7 +106,7 @@
 ##################################
 CC=gcc
 CFLAGS=-Wall -Wextra
-LIBS = -lm -lallegro -lallegro_image -lallegro_memfile
+LIBS = -lm -lallegro -lallegro_image -lallegro_memfile -lallegro_font -lallegro_main -lallegro_ttf -lallegro_color -lallegro_primitives
 
 all: main2.o	transformf.o
 	$(CC) $(CFLAGS) main2.o transformf.o $(LIBS) -o fun
