@@ -110,6 +110,20 @@ valid_px:
     cvtss2si r15d, xmm0     ; out_y - origin_y in r15d
     add     r14d, edx       ; out_x in r14d
     add     r15d, ecx       ; out_y in r15d
+minmax:
+    mov     eax, 0
+    cmp     r14d, eax
+    cmovl   r14d, eax
+    mov     ebx, [rbp+16]
+    dec     ebx
+    cmp     r14d, ebx
+    cmovge  r14d, ebx
+    cmp     r15d, eax
+    cmovl   r15d, eax
+    mov     ebx, [rbp+24]
+    dec     ebx
+    cmp     r15d, ebx
+    cmovge  r15d, ebx
 
     imul    r15d, [rbp+16]
     add     r15d, r14d

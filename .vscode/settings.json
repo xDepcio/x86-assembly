@@ -4,7 +4,9 @@
         "string.h": "c",
         "allegro_image.h": "c",
         "random": "c",
-        "allegro_ttf.h": "c"
+        "allegro_ttf.h": "c",
+        "limits": "c",
+        "cmath": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

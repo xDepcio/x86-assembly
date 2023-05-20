@@ -98,6 +98,9 @@ char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_
             int out_x = cos(rot_angle)*(x-origin_x) - sin(rot_angle)*(y-origin_y) + origin_x;
             int out_y = sin(rot_angle)*(x-origin_x) + cos(rot_angle)*(y-origin_y) + origin_y;
 
+            out_x = fmin(width-1, fmax(0, out_x));
+            out_y = fmin(height-1, fmax(0, out_y));
+
             int offset = (out_y*width + out_x)*3;
             uint8_t red = pixels[offset];
             uint8_t green = pixels[offset+1];
@@ -136,7 +139,8 @@ int main(int argc, char *argv[])
     int radius = 50;
     int angle = 45;
     int TOP_PADDING = 55;
-    const char* filename = argv[1];
+    // const char* filename = argv[1];
+    const char* filename = "ein24.bmp";
 
     BMPHeader header;
     BMPInfoHeader info_header;
