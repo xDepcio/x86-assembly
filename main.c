@@ -62,7 +62,8 @@ void savePixels(const char* filename, char* pixel_data, int pixels_offset, int p
 {
     FILE* file = fopen(filename, "r+b");
     fseek(file, pixels_offset, 1);
-    fwrite(pixel_data, pixels_size*3, 1, file);
+    // fwrite(pixel_data, pixels_size*3, 1, file); // here changed
+    fwrite(pixel_data, pixels_size, 1, file);
     fclose(file);
 }
 
@@ -77,8 +78,10 @@ char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_
 
     for (int px = 0; px < total_pixels; px++)
     {
-        int x = px % height;
-        int y = px / height;
+        // int x = px % height; // here
+        // int y = px / height; // here
+        int x = px % width;
+        int y = px / width;
 
         int dx = x-origin_x;
         int dy = y-origin_y;
@@ -102,13 +105,13 @@ char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_
             out_y = fmin(height-1, fmax(0, out_y));
 
             int offset = (out_y*width + out_x)*3;
-            uint8_t red = pixels[offset];
+            uint8_t red = pixels[offset+2];
             uint8_t green = pixels[offset+1];
-            uint8_t blue = pixels[offset+2];
+            uint8_t blue = pixels[offset];
 
-            pixels_copy[px*3] = red;
+            pixels_copy[px*3+2] = red;
             pixels_copy[px*3+1] = green;
-            pixels_copy[px*3+2] = blue;
+            pixels_copy[px*3] = blue;
         }
     }
     return pixels_copy;
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
     int angle = 45;
     int TOP_PADDING = 55;
     // const char* filename = argv[1];
-    const char* filename = "ein24.bmp";
+    const char* filename = "land_big.bmp";
 
     BMPHeader header;
     BMPInfoHeader info_header;

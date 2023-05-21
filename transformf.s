@@ -49,7 +49,7 @@ tloop:
     mov     r14d, edx
     mov     eax, r11d
     xor     rdx, rdx
-    div     dword [rbp+24]
+    div     dword [rbp+16]
     mov     r12d, edx   ; store curr x in r12d
     mov     r13d, eax   ; store curr y in r13d
     mov     edx, r14d
@@ -110,7 +110,7 @@ valid_px:
     cvtss2si r15d, xmm0     ; out_y - origin_y in r15d
     add     r14d, edx       ; out_x in r14d
     add     r15d, ecx       ; out_y in r15d
-minmax:
+
     mov     eax, 0
     cmp     r14d, eax
     cmovl   r14d, eax
@@ -142,7 +142,7 @@ next_px:
     inc     r11d
     cmp     r11d, r10d
     jne     tloop
-; ----------------------------
+
 end:
     mov     rax, rsi
 
