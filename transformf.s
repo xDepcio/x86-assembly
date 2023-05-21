@@ -21,6 +21,7 @@ transformf:
     sub     rsp, 8      ; (fp_32)rot_angle at [rbp-32]
     sub     rsp, 8      ; (fp_32)sin(rot_angle) at [rbp-40]
     sub     rsp, 8      ; (fp_32)cos(rot_angle) at [rbp-48]
+    sub     rsp, 8      ; (int_32)padding_size at [rbp-56]
 
     push    rbx
     push    r12
@@ -43,6 +44,10 @@ transformf:
     mov     eax, [rbp+24]
     sub     eax, ecx
     mov     ecx, eax    ; origin_y = height - origin_y
+
+    mov     eax, 0b11
+    and     eax, [rbp+16]
+    mov     [rbp-56], eax   ; store (int_32)padding_size at [rbp-56]
 
     mov     r11d, 0     ; current pixel num in r11d
 tloop:
@@ -125,11 +130,17 @@ valid_px:
     cmp     r15d, ebx
     cmovge  r15d, ebx
 
+    mov     eax, [rbp-56]
+    imul    eax, r15d
     imul    r15d, [rbp+16]
     add     r15d, r14d
     lea     r14, [r15d*2 + r15d]   ; offset of source pixel in r14
+    add     r14d, eax
     add     r14, rdi               ; address of source pixel in r14
+    mov     eax, [rbp-56]
+    imul    eax, r13d
     lea     rbx, [r11d*2 + r11d]
+    add     ebx, eax
     lea     r15, [rsi + rbx]       ; address of dest pixel in r15
     mov     al, [r14]              ; src pixel R value in al
     mov     [r15], al

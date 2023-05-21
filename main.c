@@ -76,6 +76,8 @@ char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_
 
     origin_y = height - origin_y;
 
+    int padding_size = width % 4;
+
     for (int px = 0; px < total_pixels; px++)
     {
         // int x = px % height; // here
@@ -104,14 +106,16 @@ char* transformPixels(char* pixels, char* pixels_copy, int origin_x, int origin_
             out_x = fmin(width-1, fmax(0, out_x));
             out_y = fmin(height-1, fmax(0, out_y));
 
-            int offset = (out_y*width + out_x)*3;
+            int padding = out_y * padding_size;
+            int offset = (out_y*width + out_x)*3 + padding;
             uint8_t red = pixels[offset+2];
             uint8_t green = pixels[offset+1];
             uint8_t blue = pixels[offset];
 
-            pixels_copy[px*3+2] = red;
-            pixels_copy[px*3+1] = green;
-            pixels_copy[px*3] = blue;
+            int res_padding = y * padding_size;
+            pixels_copy[px*3+2+res_padding] = red;
+            pixels_copy[px*3+1+res_padding] = green;
+            pixels_copy[px*3+res_padding] = blue;
         }
     }
     return pixels_copy;
